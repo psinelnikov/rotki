@@ -1,0 +1,16 @@
+# Simple approach - use official image and patch files
+FROM rotki/rotki:latest
+
+# Copy modified Python files
+COPY ./rotkehlchen/premium/premium.py /opt/rotki/rotkehlchen/premium/premium.py
+COPY ./rotkehlchen/api/rest.py /opt/rotki/rotkehlchen/api/rest.py
+COPY ./rotkehlchen/api/v1/resources.py /opt/rotki/rotkehlchen/api/v1/resources.py
+COPY ./rotkehlchen/api/services/history.py /opt/rotki/rotkehlchen/api/services/history.py
+COPY ./rotkehlchen/api/services/external_services.py /opt/rotki/rotkehlchen/api/services/external_services.py
+COPY ./rotkehlchen/api/services/transactions.py /opt/rotki/rotkehlchen/api/services/transactions.py
+
+# Note: Frontend is pre-built in the official image
+# Statistics graphs will show error (premium component) but Events Analysis works
+
+LABEL maintainer="Self-hosted AGPL version"
+LABEL description="Rotki with premium restrictions removed per AGPL-3.0 license"
