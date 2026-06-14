@@ -43,13 +43,13 @@ COPY colibri/ ./colibri
 RUN cargo build --target-dir /tmp/dist/colibri --manifest-path ./colibri/Cargo.toml --release
 
 # Stage 4: Final runtime image
-FROM nginx:1.30 AS runtime
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS runtime
 
 LABEL maintainer="Self-hosted AGPL version"
 LABEL description="Rotki with premium restrictions removed per AGPL-3.0"
 
 RUN apt-get update && \
-    apt-get install -y procps python3 --no-install-recommends && \
+    apt-get install -y nginx procps --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
