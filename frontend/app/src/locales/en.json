@@ -1029,12 +1029,15 @@
       }
     },
     "statistics": {
+      "by_asset": "Distribution by Asset",
+      "by_location": "Distribution by Location",
       "net_value": {
         "error": {
           "message": "Failed: {message}",
           "title": "Retrieving net value data"
         }
-      }
+      },
+      "net_value_over_time": "Net Value Over Time"
     },
     "transactions": {
       "error": {
