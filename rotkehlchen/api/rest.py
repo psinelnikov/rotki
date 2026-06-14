@@ -153,12 +153,10 @@ from rotkehlchen.history.skipped import (
 from rotkehlchen.history.types import HistoricalPriceOracle
 from rotkehlchen.logging import RotkehlchenLogsAdapter
 from rotkehlchen.premium.premium import (
-    ASSET_MOVEMENT_MATCHING_CAPABILITY,
     PremiumCredentials,
     UserLimitType,
     get_free_capabilities,
     get_user_limit,
-    has_premium_capability,
 )
 from rotkehlchen.rotkehlchen import Rotkehlchen
 from rotkehlchen.serialization.serialize import process_result, process_result_list
@@ -3350,15 +3348,6 @@ class RestAPI:
             return self._trigger_historical_balance_processing()
 
         else:  # task == TaskName.ASSET_MOVEMENT_MATCHING
-            if has_premium_capability(
-                    premium=self.rotkehlchen.premium,
-                    capability_name=ASSET_MOVEMENT_MATCHING_CAPABILITY,
-            ) is False:
-                return wrap_in_fail_result(
-                    message='Asset movement matching is not available for your current premium tier.',  # noqa: E501
-                    status_code=HTTPStatus.FORBIDDEN,
-                )
-
             process_asset_movements(
                 database=self.rotkehlchen.data.db,
                 should_auto_match=True,

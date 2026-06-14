@@ -39,11 +39,6 @@ from rotkehlchen.errors.asset import WrongAssetType
 from rotkehlchen.errors.misc import AlreadyExists, DataIntegrityError, InputError, RemoteError
 from rotkehlchen.errors.serialization import DeserializationError
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.premium.premium import (
-    GNOSIS_PAY_CAPABILITY,
-    MONERIUM_CAPABILITY,
-    has_premium_capability,
-)
 from rotkehlchen.types import (
     CHAINS_WITH_NODES,
     CHAINS_WITH_TRANSACTION_DECODERS,
@@ -1131,7 +1126,6 @@ class TransactionsService:
 
         if (
             has_gnosis_pay and
-            has_premium_capability(self.rotkehlchen.premium, GNOSIS_PAY_CAPABILITY) and
             self.rotkehlchen.data.db.get_external_service_credentials(
                 service_name=ExternalService.GNOSIS_PAY,
             ) is None
@@ -1139,7 +1133,6 @@ class TransactionsService:
             self.rotkehlchen.msg_aggregator.add_missing_key_message(ExternalService.GNOSIS_PAY)
         elif (
             has_monerium and
-            has_premium_capability(self.rotkehlchen.premium, MONERIUM_CAPABILITY) and
             (
                 self.rotkehlchen.monerium is None or
                 not self.rotkehlchen.monerium.oauth_client.is_authenticated()

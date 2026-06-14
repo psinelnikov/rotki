@@ -258,7 +258,6 @@ from rotkehlchen.history.types import HistoricalPriceOracle
 from rotkehlchen.premium.premium import (
     GNOSIS_PAY_CAPABILITY,
     MONERIUM_CAPABILITY,
-    has_premium_capability,
 )
 from rotkehlchen.serialization.schemas import (
     AssetSchema,
@@ -505,23 +504,14 @@ def require_premium_user(active_check: bool) -> Callable:
 
 
 def require_premium_capability(capability_name: str, pretty_name: str) -> Callable:
-    """Decorator for endpoints gated by a premium capability."""
+    """Decorator for endpoints gated by a premium capability.
+
+    Modified for self-hosted AGPL version: All capabilities are allowed.
+    """
     def _require_premium_capability(f: Callable) -> Callable:
         @wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            view_class = args[0]
-            rest_api = view_class.rest_api
-            if rest_api.rotkehlchen.user_is_logged_in is False:
-                result_dict = wrap_in_fail_result('No user is currently logged in')
-                return api_response(result_dict, status_code=HTTPStatus.UNAUTHORIZED)
-
-            if has_premium_capability(rest_api.rotkehlchen.premium, capability_name):
-                return f(*args, **kwargs)
-
-            result_dict = wrap_in_fail_result(
-                f'{pretty_name} is not available for your current subscription tier',
-            )
-            return api_response(result_dict, status_code=HTTPStatus.FORBIDDEN)
+            return f(*args, **kwargs)
 
         return wrapper
     return _require_premium_capability

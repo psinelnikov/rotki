@@ -44,11 +44,8 @@ from rotkehlchen.history.events.utils import (
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.logging import RotkehlchenLogsAdapter
 from rotkehlchen.premium.premium import (
-    GNOSIS_PAY_CAPABILITY,
-    MONERIUM_CAPABILITY,
     UserLimitType,
     get_user_limit,
-    has_premium_capability,
     has_premium_check,
 )
 from rotkehlchen.serialization.serialize import PreSerializedList
@@ -284,14 +281,6 @@ class HistoryService:
         try:
             if query_type in (HistoryEventQueryType.GNOSIS_PAY, HistoryEventQueryType.MONERIUM):
                 pretty_name = query_type.name.replace('_', ' ').title()
-                capability_name = GNOSIS_PAY_CAPABILITY if query_type == HistoryEventQueryType.GNOSIS_PAY else MONERIUM_CAPABILITY  # noqa: E501
-                if has_premium_capability(self.rotkehlchen.premium, capability_name) is False:
-                    return {
-                        'result': None,
-                        'message': f'{pretty_name} is not available for your current subscription tier',  # noqa: E501
-                        'status_code': HTTPStatus.FORBIDDEN,
-                    }
-
                 if (
                     query_type == HistoryEventQueryType.GNOSIS_PAY and
                     (gnosis_pay := init_gnosis_pay(self.rotkehlchen.data.db)) is not None

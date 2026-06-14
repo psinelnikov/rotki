@@ -4,7 +4,6 @@ from typing import Any, Final
 from rotkehlchen.constants.misc import ONE
 from rotkehlchen.externalapis.helius import HELIUS_RPC_NODE_NAME, HELIUS_RPC_URL
 from rotkehlchen.fval import FVal
-from rotkehlchen.premium.premium import has_premium_check
 from rotkehlchen.rotkehlchen import Rotkehlchen
 from rotkehlchen.types import ExternalService, ExternalServiceApiCredentials, SupportedBlockchain
 
@@ -108,13 +107,7 @@ class ExternalServicesService:
         should_renable_etherscan = False
         helius_api_key = None
         for service in services:
-            if service.service.premium_only() and not has_premium_check(self.rotkehlchen.premium):
-                return (
-                    False,
-                    f'You can only use {service.service} with rotki premium',
-                    None,
-                    HTTPStatus.FORBIDDEN,
-                )
+            # Premium check removed for self-hosted AGPL version
             if service.service == ExternalService.GNOSIS_PAY:
                 return (
                     False,

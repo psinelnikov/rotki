@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  rotki:
+    build:
+      context: .
+      dockerfile: Dockerfile.agpl
+    container_name: rotki
+    restart: unless-stopped
+    ports:
+      - '8084:80'
+    environment:
+      - TZ=Europe/London
+      - ROTKI_ACCEPT_DOCKER_RISK=1
+    volumes:
+      - $HOME/.rotki/data:/data
+      - $HOME/.rotki/logs:/logs
+    networks:
+      - rotki-net
+    labels:
+      # Disable watchtower for this container - we build locally
+      - com.centurylinklabs.watchtower.enable=false
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: unless-stopped
+    command:
+      - --label-enable
+      - --interval
+      - '86400'
+      - --rolling-restart
+    volumes:
+      - /run/podman/podman.sock:/var/run/docker.sock
+
+networks:
+  rotki-net:

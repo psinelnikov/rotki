@@ -236,39 +236,41 @@ def fetch_capability_unlocks() -> dict[str, str]:
 
 
 def get_free_capabilities() -> PremiumCapabilities:
-    """Get capabilities payload for free users."""
-    unlocks = fetch_capability_unlocks()
+    """Get capabilities payload for free users.
+
+    Modified for self-hosted AGPL version: All features enabled.
+    """
     return PremiumCapabilities(
-        current_tier='Free',
-        limit_of_devices=0,
-        pnl_events_limit=FREE_PNL_EVENTS_LIMIT,
-        max_backup_size_mb=0,
-        history_events_limit=FREE_HISTORY_EVENTS_LIMIT,
-        reports_lookup_limit=FREE_REPORTS_LOOKUP_LIMIT,
-        eth_staked_limit=UserLimitType.ETH_STAKED.get_free_limit(),
+        current_tier='SelfHosted',
+        limit_of_devices=999_999,
+        pnl_events_limit=999_999_999,
+        max_backup_size_mb=999_999,
+        history_events_limit=999_999_999,
+        reports_lookup_limit=999_999_999,
+        eth_staked_limit=999_999_999,
         eth_staking_view=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get('eth_staking_view'),
+            enabled=True,
+            minimum_tier=None,
         ),
         graphs_view=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get('graphs_view'),
+            enabled=True,
+            minimum_tier=None,
         ),
         event_analysis_view=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get('event_analysis_view'),
+            enabled=True,
+            minimum_tier=None,
         ),
         asset_movement_matching=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get('asset_movement_matching'),
+            enabled=True,
+            minimum_tier=None,
         ),
         gnosispay=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get(GNOSIS_PAY_CAPABILITY),
+            enabled=True,
+            minimum_tier=None,
         ),
         monerium=PremiumFeatureCapability(
-            enabled=False,
-            minimum_tier=unlocks.get(MONERIUM_CAPABILITY),
+            enabled=True,
+            minimum_tier=None,
         ),
     )
 
@@ -1104,41 +1106,27 @@ def premium_create_and_verify(
 
 
 def has_premium_check(premium: Premium | None) -> bool:
-    """Helper function to check if we have premium"""
-    return premium is not None and premium.is_active()
+    """Helper function to check if we have premium.
+
+    Modified for self-hosted AGPL version: Always returns True.
+    """
+    return True
 
 
 def get_user_limit(premium: Premium | None, limit_type: UserLimitType) -> tuple[int, bool]:
-    """Helper function to get a specific user limit and premium status
+    """Helper function to get a specific user limit and premium status.
+
+    Modified for self-hosted AGPL version: Returns unlimited values.
 
     Returns:
         tuple[int, bool]: (limit_value, has_premium)
     """
-    if premium is None or premium.is_active() is False:
-        log.debug(f'No premium subscription or inactive, returning free limit for {limit_type}')
-        return limit_type.get_free_limit(), False
-
-    try:
-        limits = premium.fetch_limits()
-        return limits[limit_type.value], True
-    except (RemoteError, PremiumAuthenticationError, KeyError) as e:
-        msg = str(e)
-        if isinstance(e, KeyError):  # that's a bad error that needs action on our side
-            msg = f'missing key {msg} from the premium limits response. Report this to rotki devs.'
-            premium.msg_aggregator.add_error(msg)  # make sure users see this error
-
-        log.error(f'Failed to fetch limits from server: {e}. Falling back to free limits')
-        return limit_type.get_free_limit(), False
+    return 999_999_999, True  # Unlimited for self-hosted version
 
 
 def has_premium_capability(premium: Premium | None, capability_name: str) -> bool:
-    """Helper function to check if an active premium user has a specific capability."""
-    if premium is None or premium.is_active() is False:
-        return False
+    """Helper function to check if an active premium user has a specific capability.
 
-    try:
-        limits = premium.fetch_limits()
-        return bool(limits.get(capability_name, False))
-    except (RemoteError, PremiumAuthenticationError) as e:
-        log.error(f'Failed to fetch capabilities from server: {e}. Falling back to free tier')
-        return False
+    Modified for self-hosted AGPL version: All capabilities are always enabled.
+    """
+    return True
