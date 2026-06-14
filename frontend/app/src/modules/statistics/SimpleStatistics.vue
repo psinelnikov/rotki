@@ -10,6 +10,7 @@ import {
 } from 'echarts/components';
 import VChart from 'vue-echarts';
 import { useStatisticsApi } from '@/modules/statistics/api/use-statistics-api';
+import { logger } from '@/modules/core/common/logging/logging';
 
 use([
   CanvasRenderer,
@@ -86,21 +87,21 @@ onMounted(async () => {
     const netValue = await api.queryNetValueData(true);
     netValueData.value = {
       times: netValue.times,
-      values: netValue.values,
+      values: netValue.data.map(v => Number(v)),
     };
 
     // Location distribution
     const locations = await api.queryLatestLocationValueDistribution();
     locationDistribution.value = Object.entries(locations).map(([name, data]) => ({
       name,
-      value: data.usdValue,
+      value: Number(data.usdValue),
     }));
 
     // Asset distribution
     const assets = await api.queryLatestAssetValueDistribution();
     assetDistribution.value = assets.map(asset => ({
       name: asset.asset,
-      value: asset.usdValue,
+      value: Number(asset.value.usdValue),
     })).slice(0, 10); // Top 10 assets
   }
   catch (error) {
