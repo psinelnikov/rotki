@@ -99,7 +99,7 @@ onMounted(async () => {
 
     // Asset distribution
     const assets = await api.queryLatestAssetValueDistribution();
-    assetDistribution.value = assets.map(asset => ({
+    assetDistribution.value = (assets as Array<{ asset: string; usdValue: BigNumber; time: number }>).map(asset => ({
       name: asset.asset,
       value: Number(asset.usdValue),
     })).slice(0, 10); // Top 10 assets
