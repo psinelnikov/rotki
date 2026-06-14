@@ -1,25 +1,65 @@
-# Build a custom rotki image with premium restrictions removed
-# This layers your Python changes on top of the official image
+# Builds a self-hosted AGPL rotki image with premium restrictions removed.
+#
+# Unlike the simple COPY approach, this builds the backend from source so that
+# Python modifications are actually used (the official image's PyInstaller binary
+# ignores overlaid .py files). The pre-built frontend and colibri binary are
+# reused from the official image to avoid expensive Rust/frontend compilation.
 
-FROM rotki/rotki:latest AS base
+# ---------------------------------------------------------------------------
+# Stage 1: official image — extract pre-built frontend + colibri
+# ---------------------------------------------------------------------------
+FROM rotki/rotki:latest AS official
 
-# Copy modified Python files to override premium restrictions
-# These are the minimal changes needed to unlock all features
-COPY ./rotkehlchen/premium/premium.py /opt/rotki/rotkehlchen/premium/premium.py
-COPY ./rotkehlchen/api/rest.py /opt/rotki/rotkehlchen/api/rest.py
-COPY ./rotkehlchen/api/v1/resources.py /opt/rotki/rotkehlchen/api/v1/resources.py
-COPY ./rotkehlchen/api/services/history.py /opt/rotki/rotkehlchen/api/services/history.py
-COPY ./rotkehlchen/api/services/external_services.py /opt/rotki/rotkehlchen/api/services/external_services.py
-COPY ./rotkehlchen/api/services/transactions.py /opt/rotki/rotkehlchen/api/services/transactions.py
+# ---------------------------------------------------------------------------
+# Stage 2: build backend from source with uv (no Rust, no frontend compile)
+# ---------------------------------------------------------------------------
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS backend-builder
 
-# Frontend changes - enable all features in UI
-COPY ./frontend/app/src/modules/premium/use-feature-access.ts /opt/rotki/frontend/app/src/modules/premium/use-feature-access.ts
-COPY ./frontend/app/src/modules/statistics/SimpleStatistics.vue /opt/rotki/frontend/app/src/modules/statistics/SimpleStatistics.vue
-COPY ./frontend/app/src/pages/statistics/graphs/index.vue /opt/rotki/frontend/app/src/pages/statistics/graphs/index.vue
+WORKDIR /app
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --locked --no-dev --no-install-project
 
-# Note: The frontend is pre-built in the base image. These source changes
-# won't affect the running app unless the frontend is rebuilt.
-# For immediate use, the backend changes provide full functionality.
+COPY . /app
+RUN uv sync --locked --no-dev --no-install-project && \
+    uv pip install -e . && \
+    uv pip install oauthlib  # runtime dep needed by monerium, only in dev group
+
+# ---------------------------------------------------------------------------
+# Stage 3: runtime
+# ---------------------------------------------------------------------------
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS runtime
 
 LABEL maintainer="Self-hosted AGPL version"
 LABEL description="Rotki with premium restrictions removed per AGPL-3.0 license"
+
+# nginx for serving frontend + reverse proxy; python3 symlink for entrypoint
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nginx procps curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    rm -f /etc/nginx/sites-enabled/default && \
+    ln -sf /usr/local/bin/python3 /usr/bin/python3
+
+# Backend source + venv (uses the modified Python files)
+COPY --from=backend-builder /app /app
+
+# Pre-built frontend and colibri from official image
+COPY --from=official /opt/rotki/frontend /opt/rotki/frontend
+COPY --from=official /opt/rotki/colibri /opt/rotki/colibri
+
+# Patch frontend JS bundle to remove premium restrictions
+COPY ./packaging/docker/patch-frontend.py /tmp/patch-frontend.py
+RUN python3 /tmp/patch-frontend.py && rm /tmp/patch-frontend.py
+
+# Wrapper scripts — entrypoint calls /usr/sbin/rotki and /usr/sbin/colibri
+RUN ln -sf /opt/rotki/colibri /usr/sbin/colibri && \
+    printf '#!/bin/sh\nexec /app/.venv/bin/python -m rotkehlchen "$@"\n' > /usr/sbin/rotki && \
+    chmod +x /usr/sbin/rotki
+
+# nginx config + entrypoint
+COPY ./packaging/docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./packaging/docker/entrypoint.py /opt/rotki/entrypoint.py
+
+VOLUME ["/data", "/logs", "/config"]
+EXPOSE 80
+
+CMD ["/opt/rotki/entrypoint.py"]

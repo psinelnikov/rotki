@@ -169,17 +169,6 @@ def test_match_asset_movements_errors(rotkehlchen_api_server: 'APIServer') -> No
     )
 
 
-def test_match_asset_movements_requires_premium(rotkehlchen_api_server: 'APIServer') -> None:
-    assert_error_response(
-        response=requests.put(
-            url=api_url_for(rotkehlchen_api_server, 'matchassetmovementsresource'),
-            json={'asset_movement': 1, 'matched_events': [2]},
-        ),
-        status_code=HTTPStatus.FORBIDDEN,
-        contained_in_msg='does not have a premium subscription',
-    )
-
-
 @pytest.mark.parametrize('start_with_valid_premium', [True])
 def test_multi_match_asset_movements(rotkehlchen_api_server: 'APIServer') -> None:
     """Test manually matching an asset movement with multiple onchain events."""
