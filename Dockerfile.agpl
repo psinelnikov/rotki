@@ -14,10 +14,12 @@ COPY ./rotkehlchen/api/services/transactions.py /opt/rotki/rotkehlchen/api/servi
 
 # Frontend changes - enable all features in UI
 COPY ./frontend/app/src/modules/premium/use-feature-access.ts /opt/rotki/frontend/app/src/modules/premium/use-feature-access.ts
+COPY ./frontend/app/src/modules/statistics/SimpleStatistics.vue /opt/rotki/frontend/app/src/modules/statistics/SimpleStatistics.vue
+COPY ./frontend/app/src/pages/statistics/graphs/index.vue /opt/rotki/frontend/app/src/pages/statistics/graphs/index.vue
 
-# No need to rebuild anything - the backend uses Python files directly
-# Frontend would need rebuild, but we're copying to the mounted source
-# For production, the frontend in /opt/rotki/frontend/dist is pre-built
+# Note: The frontend is pre-built in the base image. These source changes
+# won't affect the running app unless the frontend is rebuilt.
+# For immediate use, the backend changes provide full functionality.
 
 LABEL maintainer="Self-hosted AGPL version"
 LABEL description="Rotki with premium restrictions removed per AGPL-3.0 license"
