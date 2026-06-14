@@ -24,15 +24,14 @@ export function useFeatureAccess(feature: MaybeRefOrGetter<PremiumFeature>): Use
   const { capabilities, premium } = storeToRefs(store);
 
   const allowed = computed<boolean>(() => {
-    if (!get(premium))
-      return false;
-
-    const caps = get(capabilities);
+    // Self-hosted AGPL version: all features enabled
     const featureValue = toValue(feature);
-    if (featureValue === PremiumFeature.CLOUD_BACKUP)
+    // Cloud backup still requires actual premium credentials
+    if (featureValue === PremiumFeature.CLOUD_BACKUP) {
+      const caps = get(capabilities);
       return (caps?.maxBackupSizeMb ?? 0) > 0;
-
-    return caps?.[featureValue]?.enabled ?? false;
+    }
+    return true;
   });
 
   const minimumTier = computed<string | null>(() => {
@@ -46,10 +45,13 @@ export function useFeatureAccess(feature: MaybeRefOrGetter<PremiumFeature>): Use
 
   const currentTier = computed<string>(() => get(capabilities)?.currentTier ?? 'Free');
 
+  // Self-hosted AGPL version: always report as having premium access
+  const premiumEnabled = computed<boolean>(() => true);
+
   return {
     allowed: readonly(allowed),
     currentTier: readonly(currentTier),
     minimumTier: readonly(minimumTier),
-    premium,
+    premium: readonly(premiumEnabled),
   };
 }
