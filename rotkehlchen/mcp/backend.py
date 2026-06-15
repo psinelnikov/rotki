@@ -42,10 +42,18 @@ def request_api(
         endpoint: str,
         timeout: int,
         params: dict[str, Any] | None = None,
+        method: str = 'GET',
+        json_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     url = _api_url(base_url=base_url, endpoint=endpoint)
     try:
-        response = requests.get(url=url, params=params, timeout=timeout)
+        response = requests.request(
+            method=method,
+            url=url,
+            params=params,
+            json=json_data,
+            timeout=timeout,
+        )
     except requests.exceptions.RequestException as e:
         raise BackendQueryError(f'Could not connect to rotki backend at {url}: {e!s}') from e
 
