@@ -489,14 +489,7 @@ def require_premium_user(active_check: bool) -> Callable:
                 f'Currently logged in user {rest_api.rotkehlchen.data.username} '
                 f'does not have a premium subscription'
             )
-            if rest_api.rotkehlchen.premium is None:
-                result_dict = wrap_in_fail_result(msg)
-                return api_response(result_dict, status_code=HTTPStatus.FORBIDDEN)
-
-            if active_check and rest_api.rotkehlchen.premium.is_active() is False:
-                result_dict = wrap_in_fail_result(msg)
-                return api_response(result_dict, status_code=HTTPStatus.FORBIDDEN)
-
+            # AGPL self-hosted: all premium restrictions removed
             return f(*args, **kwargs)
 
         return wrapper

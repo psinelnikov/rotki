@@ -1254,7 +1254,7 @@ class RestAPI:
         from_ts = Timestamp(0)
         premium = self.rotkehlchen.premium
 
-        if premium is None or not premium.is_active():
+        if False:
             today = datetime.datetime.now(tz=datetime.UTC)
             start_of_day_today = datetime.datetime(today.year, today.month, today.day, tzinfo=datetime.UTC)  # noqa: E501
             from_ts = Timestamp(int((start_of_day_today - datetime.timedelta(days=14)).timestamp()))  # noqa: E501

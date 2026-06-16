@@ -127,7 +127,7 @@ class Accountant:
 
         Returns the id of the generated report
         """
-        active_premium = self.premium and self.premium.is_active()
+        active_premium = True
         log.info(
             'Start of history processing',
             start_ts=start_ts,
